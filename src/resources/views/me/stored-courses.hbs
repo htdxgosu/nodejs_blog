@@ -1,0 +1,65 @@
+<div class="mt-4">
+    <h2>Khoa hoc cua tao</h2>
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Name</th>
+                <th scope="col">Trinh do</th>
+                <th scope="col">Thoi gian tao</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each courses}}
+            <tr>
+                <th scope="row">{{sum @index 1}}</th>
+                <td>{{this.name}}</td>
+                <td>{{this.level}}</td>
+                <td>{{this.createdAt}}</td>
+                <td>
+                    <a href="/courses/{{this._id}}/edit" class="btn btn-link">Sua</a>
+                    <a href="" class="btn btn-link" data-bs-toggle="modal" data-id="{{this._id}}"
+                        data-bs-target="#delete-course-modal">Xoa</a>
+                </td>
+                {{/each}}
+        </tbody>
+    </table>
+</div>
+
+<div id="delete-course-modal" class="modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xoa khoa hoc ?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>May chac chan khong</p>
+            </div>
+            <div class="modal-footer">
+                <button id="btnDeleteCourse" type="button" class="btn btn-danger">Xoa bo</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form name="deleteCourseForm" method="POST">
+
+</form>
+
+<script>
+    var courseID
+    var deleteForm = document.forms['deleteCourseForm']
+    var delete_course = document.getElementById('delete-course-modal')
+    var btnDeleteCourse = document.getElementById('btnDeleteCourse')
+    delete_course.addEventListener('show.bs.modal', event => {
+        var button = event.relatedTarget
+        courseID = button.getAttribute('data-id')
+    })
+
+    btnDeleteCourse.onclick = function () {
+        deleteForm.action = '/courses/' + courseID + '?_method=DELETE'
+        deleteForm.submit()
+    }
+</script>
