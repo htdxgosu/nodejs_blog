@@ -1,17 +1,50 @@
-<div class="mt-4">
+<form class="mt-4" name="container-form" method="POST" action="/courses/handle-form-actions">
     <h2>Khoa hoc cua tao</h2>
+    {{#if deletedCount}}
+    <a href="/me/trash/courses">Thung rac ({{deletedCount}}) </a>
+    {{/if}}
+    <div class="mt-4 d-flex align-items-center">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="checkboxAll">
+            <label class="form-check-label" for="checkboxAll">
+                Chon tat ca
+            </label>
+        </div>
+        <select class="form-select form-select-sm checkbox-select-all-options " aria-label="Default select example"
+            name="action" required>
+            <option value="" selected>--Hanh dong--</option>
+            <option value="Delete">Xoa</option>
+            <option value="2">Two</option>
+        </select>
+
+        <button class="btn btn-primary btn-checkAllSubmit btn-sm disabled">Ap dung</button>
+    </div>
+
+
     <table class="table mt-4">
         <thead>
             <tr>
-                <th scope="col">#</th>
-                <th scope="col">Name</th>
-                <th scope="col">Trinh do</th>
-                <th scope="col">Thoi gian tao</th>
+                <th scope="col" colspan="2">#</th>
+                <th scope="col">
+                    Name
+                    {{{sortable 'name' _sort}}}
+                </th>
+                <th scope="col">Trinh do
+                    {{{sortable 'level' _sort}}}
+                </th>
+                <th scope="col">Thoi gian tao
+                    {{{sortable 'createdAt' _sort}}}
+                </th>
             </tr>
         </thead>
         <tbody>
             {{#each courses}}
             <tr>
+                <td>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="courseID[]" value="{{this._id}}">
+                    </div>
+                </td>
                 <th scope="row">{{sum @index 1}}</th>
                 <td>{{this.name}}</td>
                 <td>{{this.level}}</td>
@@ -21,45 +54,87 @@
                     <a href="" class="btn btn-link" data-bs-toggle="modal" data-id="{{this._id}}"
                         data-bs-target="#delete-course-modal">Xoa</a>
                 </td>
-                {{/each}}
+                {{else}}
+            <tr>
+                <td colspan="5" class="text-center">
+                    Ban chua dang khoa hoc nao.
+                    <a href="/courses/create">Dang khoa hoc</a>
+                </td>
+            </tr>
+            {{/each}}
         </tbody>
     </table>
-</div>
+    </div>
 
-<div id="delete-course-modal" class="modal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Xoa khoa hoc ?</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>May chac chan khong</p>
-            </div>
-            <div class="modal-footer">
-                <button id="btnDeleteCourse" type="button" class="btn btn-danger">Xoa bo</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huy</button>
+    <div id="delete-course-modal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Xoa khoa hoc ?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>May chac chan khong</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btnDeleteCourse" type="button" class="btn btn-danger">Xoa bo</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huy</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var courseID
+            var deleteForm = document.forms['deleteCourseForm']
+            var btnDeleteCourse = document.getElementById('btnDeleteCourse')
+            var checkboxAll = $('#checkboxAll')
+            var containerForm = document.forms['container-form']
+            var courseItemCheckbox = $('input[name="courseID[]"]')
+            var btnCheckAll = $('.btn-checkAllSubmit')
+            $('#delete-course-modal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget)
+                courseID = button.data('id')
+            })
+            //
+            btnDeleteCourse.onclick = function () {
+                deleteForm.action = '/courses/' + courseID + '?_method=DELETE'
+                deleteForm.submit()
+            }
+            //
+            checkboxAll.change(function () {
+                var isCheckedAll = $(this).prop('checked')
+                courseItemCheckbox.prop('checked', isCheckedAll)
+                renderCheckAllSubmitBtn()
+            })
+            //
+            courseItemCheckbox.change(function () {
+                var isCheckedAll = courseItemCheckbox.length === $('input[name="courseID[]"]:checked').length
+                checkboxAll.prop('checked', isCheckedAll)
+                renderCheckAllSubmitBtn()
+            })
+
+            btnCheckAll.on('submit', function (e) {
+                var isSubmitable = !$(this).hasClass('disabled')
+                if (!isSubmitable) {
+                    e.preventDefault()
+                }
+            })
+
+            function renderCheckAllSubmitBtn() {
+                var checkedCount = $('input[name="courseID[]"]:checked').length
+                if (checkedCount > 0) {
+                    btnCheckAll.removeClass('disabled')
+                } else {
+                    btnCheckAll.addClass('disabled')
+                }
+            }
+        })
+    </script>
+</form>
 
 <form name="deleteCourseForm" method="POST">
 
 </form>
-
-<script>
-    var courseID
-    var deleteForm = document.forms['deleteCourseForm']
-    var delete_course = document.getElementById('delete-course-modal')
-    var btnDeleteCourse = document.getElementById('btnDeleteCourse')
-    delete_course.addEventListener('show.bs.modal', event => {
-        var button = event.relatedTarget
-        courseID = button.getAttribute('data-id')
-    })
-
-    btnDeleteCourse.onclick = function () {
-        deleteForm.action = '/courses/' + courseID + '?_method=DELETE'
-        deleteForm.submit()
-    }
-</script>

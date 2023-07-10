@@ -8,7 +8,8 @@ class CourseController {
     show(req, res, next) {
         Course.findOne({ slug: req.params.slug })
             .then(course =>
-                res.render('courses/show', { course: mongooseToObject(course) })
+                res.render('courses/show',
+                    { course: mongooseToObject(course) })
             )
             .catch(next)
     }
@@ -19,20 +20,17 @@ class CourseController {
 
     //[POST]
     store(req, res, next) {
-        const formData = req.body
-        formData.img = `https://i.ytimg.com/vi/${req.body.videoID}/maxresdefault.jpg`
-        const course = new Course(formData)
+        req.body.img = `https://i.ytimg.com/vi/${req.body.videoID}/maxresdefault.jpg`
+        const course = new Course(req.body)
         course.save()
-            .then(() => res.redirect('/'))
-            .catch(error => {
-
-            })
+            .then(() => res.redirect('/me/stored/courses'))
+            .catch(next)
     }
     //
 
     edit(req, res, next) {
         Course.findById(req.params.id)
-            .then(course => res.render('courses/edit', {
+            .then((course) => res.render('courses/edit', {
                 course: mongooseToObject(course)
             }))
             .catch(next)
@@ -47,10 +45,36 @@ class CourseController {
 
     //
     destroy(req, res, next) {
+        Course.delete({ _id: req.params.id })
+            .then(() => res.redirect('back'))
+            .catch(next)
+    }
+    //
+
+    restore(req, res, next) {
+        Course.restore({ _id: req.params.id })
+            .then(() => res.redirect('back'))
+            .catch(next)
+    }
+    //
+    forceDestroy(req, res, next) {
         Course.deleteOne({ _id: req.params.id })
             .then(() => res.redirect('back'))
             .catch(next)
     }
+
+    //
+    handleFormActions(req, res, next) {
+        switch (req.body.action) {
+            case 'Delete':
+                Course.delete({ _id: { $in: req.body.courseID } })
+                    .then(() => res.redirect('back'))
+                    .catch(next)
+                break
+            default:
+                res.json({ error: 'Invalid Action' })
+        }
+    }
 }
 
-module.exports = new CourseController
+module.exports = new CourseController()
