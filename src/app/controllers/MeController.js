@@ -22,11 +22,19 @@ class MeController {
     }
 
     trashCourses(req, res, next) {
-        Course.findDeleted({})
+
+        let courseQuery = Course.findDeleted({})
+
+        courseQuery
             .then((courses) => res.render('me/trash-courses', {
                 courses: mutipleMongooseToObject(courses)
             }))
             .catch(next)
+        if (req.query.hasOwnProperty('_sort')) {
+            courseQuery = courseQuery.sort({
+                [req.query.column]: req.query.type
+            })
+        }
     }
 }
 
